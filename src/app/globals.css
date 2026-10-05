@@ -24,3 +24,20 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Chart tokens: categorical slots 1-2 of the validated palette, stepped per mode. */
+:root {
+  --series-income: #2a78d6;
+  --series-expense: #eb6834;
+  --chart-grid: #e7e6e2;
+  --chart-text: #52514e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --series-income: #3987e5;
+    --series-expense: #d95926;
+    --chart-grid: #2c2c2a;
+    --chart-text: #c3c2b7;
+  }
+}

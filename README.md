@@ -38,7 +38,7 @@ Built with Next.js (App Router, TypeScript), Tailwind CSS, Drizzle ORM and Postg
 - [x] Categories
 - [x] Accounts and transfers
 - [x] Budgets
-- [ ] Dashboard and charts
+- [x] Dashboard and charts
 - [ ] Recurring entries
 - [ ] CSV export
 - [ ] Vercel deployment

@@ -21,23 +21,27 @@ export function monthRange(month: string) {
   return { start: `${month}-01`, end: `${next}-01` };
 }
 
+// Month names are spelled out here rather than via toLocaleDateString, whose
+// output differs between Node and browsers (e.g. "Sep" vs "Sept").
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
 export function formatMonth(month: string) {
   const [y, m] = month.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("en-IN", {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+  return `${MONTHS[m - 1]} ${y}`;
+}
+
+export function formatMonthShort(month: string, withYear = false) {
+  const [y, m] = month.split("-").map(Number);
+  const name = MONTHS[m - 1].slice(0, 3);
+  return withYear ? `${name} ${String(y).slice(2)}` : name;
 }
 
 export function formatDate(value: string) {
   const [y, m, d] = value.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+  return `${d} ${MONTHS[m - 1].slice(0, 3)} ${y}`;
 }
 
 export function shiftMonth(month: string, delta: number) {
