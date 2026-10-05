@@ -2,12 +2,12 @@
 
 A personal finance tracker for income, expenses, budgets and accounts.
 
-Built with Next.js (App Router, TypeScript), Tailwind CSS, Drizzle ORM and Neon Postgres. Deploys on Vercel's free plan.
+Built with Next.js (App Router, TypeScript), Tailwind CSS, Drizzle ORM and Postgres (Neon in production). Deploys on Vercel's free plan.
 
 ## Getting started
 
 1. Create a free Postgres database at [neon.tech](https://neon.tech) and copy its connection string.
-2. Copy `.env.example` to `.env.local` and set `DATABASE_URL`.
+2. Copy `.env.example` to `.env.local` and set `DATABASE_URL` and `SESSION_SECRET` (`openssl rand -base64 32`).
 3. Install and run:
 
    ```bash
@@ -33,7 +33,7 @@ Built with Next.js (App Router, TypeScript), Tailwind CSS, Drizzle ORM and Neon 
 ## Modules
 
 - [x] Setup
-- [ ] Login
+- [x] Login (email and password)
 - [ ] Transactions
 - [ ] Categories
 - [ ] Accounts and transfers
