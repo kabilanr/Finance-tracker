@@ -18,6 +18,18 @@ Built with Next.js (App Router, TypeScript), Tailwind CSS, Drizzle ORM and Postg
 
 4. Open http://localhost:3000. Visit `/api/health` to check the database connection.
 
+## Deploying to Vercel (free plan)
+
+1. On [vercel.com](https://vercel.com), choose **Add New → Project** and import this GitHub repository. Keep the detected Next.js settings.
+2. In the new project, open **Storage → Create Database → Neon** (free) and connect it to the project. This sets `DATABASE_URL` for you.
+3. In **Settings → Environment Variables**, add:
+   - `SESSION_SECRET`: a long random string (`openssl rand -base64 32`)
+   - `CRON_SECRET`: another long random string, used by the daily recurring-entries job
+4. Redeploy (**Deployments → ⋯ → Redeploy**). The build applies database migrations automatically (`npm run vercel-build`).
+5. Open the site, visit `/api/health` to confirm the database is connected, then sign up.
+
+A daily Vercel Cron job (`vercel.json`) calls `/api/cron/recurring` to add recurring entries even on days you don't open the app.
+
 ## Scripts
 
 | Script | What it does |
@@ -29,6 +41,7 @@ Built with Next.js (App Router, TypeScript), Tailwind CSS, Drizzle ORM and Postg
 | `npm run db:generate` | Generate a migration from `src/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations to the database |
 | `npm run db:studio` | Browse the database |
+| `npm run vercel-build` | Apply migrations, then build (used by Vercel) |
 
 ## Modules
 
@@ -41,4 +54,4 @@ Built with Next.js (App Router, TypeScript), Tailwind CSS, Drizzle ORM and Postg
 - [x] Dashboard and charts
 - [x] Recurring entries
 - [x] CSV export
-- [ ] Vercel deployment
+- [ ] Vercel deployment (steps above)
