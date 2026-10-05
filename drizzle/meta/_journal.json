@@ -8,6 +8,13 @@
       "when": 1791221615791,
       "tag": "0000_unknown_bushwacker",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791221946044,
+      "tag": "0001_strong_tiger_shark",
+      "breakpoints": true
     }
   ]
 }

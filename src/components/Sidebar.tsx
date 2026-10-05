@@ -15,7 +15,7 @@ export function Sidebar() {
             key={item.href}
             href={item.href}
             className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium ${
-              pathname === item.href
+              (item.href === "/" ? pathname === "/" : pathname.startsWith(item.href))
                 ? "bg-emerald-600 text-white"
                 : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
             }`}
