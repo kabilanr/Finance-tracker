@@ -4,7 +4,7 @@ export type NavItem = { href: string; label: string; ready: boolean };
 export const navItems: NavItem[] = [
   { href: "/", label: "Dashboard", ready: true },
   { href: "/transactions", label: "Transactions", ready: true },
-  { href: "/categories", label: "Categories", ready: false },
+  { href: "/categories", label: "Categories", ready: true },
   { href: "/accounts", label: "Accounts", ready: false },
   { href: "/budgets", label: "Budgets", ready: false },
   { href: "/recurring", label: "Recurring", ready: false },

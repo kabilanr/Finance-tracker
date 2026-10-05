@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
-import type { Transaction } from "@/db/schema";
+import { useActionState, useState } from "react";
+import type { Transaction, TransactionType } from "@/db/schema";
+import type { CategoryOption } from "@/lib/categories";
 import type { TransactionFormState } from "@/lib/transaction-schema";
 
 type Action = (state: TransactionFormState, formData: FormData) => Promise<TransactionFormState>;
@@ -17,17 +18,21 @@ function FieldError({ errors }: { errors?: string[] }) {
 export function TransactionForm({
   action,
   transaction,
+  categories,
   defaultDate,
   submitLabel,
 }: {
   action: Action;
   transaction?: Transaction;
+  categories: CategoryOption[];
   defaultDate: string;
   submitLabel: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const v = state?.values;
-  const type = v?.type ?? transaction?.type ?? "expense";
+  const [type, setType] = useState<TransactionType>(transaction?.type ?? "expense");
+  const [categoryId, setCategoryId] = useState(transaction?.categoryId ?? "");
+  const options = categories.filter((c) => c.type === type);
 
   return (
     <form action={formAction} className="space-y-4">
@@ -39,7 +44,17 @@ export function TransactionForm({
               key={t}
               className="flex cursor-pointer items-center justify-center rounded-md border border-slate-300 px-3 py-2 text-sm capitalize has-checked:border-emerald-600 has-checked:bg-emerald-50 has-checked:font-medium dark:border-slate-700 dark:has-checked:bg-emerald-950"
             >
-              <input type="radio" name="type" value={t} defaultChecked={type === t} className="sr-only" />
+              <input
+                type="radio"
+                name="type"
+                value={t}
+                checked={type === t}
+                onChange={() => {
+                  setType(t);
+                  setCategoryId("");
+                }}
+                className="sr-only"
+              />
               {t}
             </label>
           ))}
@@ -83,14 +98,21 @@ export function TransactionForm({
       </label>
 
       <label className="block text-sm">
-        Category <span className="text-slate-400">(optional)</span>
-        <input
-          name="category"
-          placeholder="e.g. Food, Rent, Salary"
-          defaultValue={v?.category ?? transaction?.category ?? ""}
+        Category
+        <select
+          name="categoryId"
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
           className={inputClass}
-        />
-        <FieldError errors={state?.errors?.category} />
+        >
+          <option value="">Uncategorized</option>
+          {options.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <FieldError errors={state?.errors?.categoryId} />
       </label>
 
       <label className="block text-sm">

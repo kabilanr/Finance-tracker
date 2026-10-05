@@ -11,7 +11,7 @@ export const TransactionSchema = z.object({
     .refine((n) => n < 1_000_000_000_000, { error: "Amount is too large." }),
   date: z.iso.date({ error: "Pick a valid date." }),
   description: z.string().trim().min(1, { error: "Add a short description." }).max(200),
-  category: z.string().trim().max(60).optional(),
+  categoryId: z.uuid({ error: "Pick a category from the list." }).optional(),
   note: z.string().trim().max(1000).optional(),
 });
 

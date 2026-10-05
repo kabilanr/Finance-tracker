@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import * as z from "zod";
 import { db } from "@/db";
 import { transactions } from "@/db/schema";
+import { getCategory } from "@/lib/categories";
 import { verifySession } from "@/lib/dal";
 import { isUuid, TransactionSchema, type TransactionFormState } from "@/lib/transaction-schema";
 
@@ -19,15 +20,30 @@ function parse(formData: FormData) {
     amount: optional("amount"),
     date: formData.get("date"),
     description: formData.get("description") ?? "",
-    category: optional("category"),
+    categoryId: optional("categoryId"),
     note: optional("note"),
   });
 }
 
-function invalid(error: z.ZodError, formData: FormData): TransactionFormState {
+function formValues(formData: FormData) {
   const values: Record<string, string> = {};
   for (const [key, value] of formData) if (typeof value === "string") values[key] = value;
-  return { errors: z.flattenError(error).fieldErrors, values };
+  return values;
+}
+
+function invalid(error: z.ZodError, formData: FormData): TransactionFormState {
+  return { errors: z.flattenError(error).fieldErrors, values: formValues(formData) };
+}
+
+function badCategory(formData: FormData): TransactionFormState {
+  return { errors: { categoryId: ["Pick a category that matches the type."] }, values: formValues(formData) };
+}
+
+// A category must belong to the user and match the transaction's type.
+async function checkCategory(userId: string, data: z.infer<typeof TransactionSchema>) {
+  if (!data.categoryId) return true;
+  const category = await getCategory(userId, data.categoryId);
+  return category?.type === data.type;
 }
 
 function toRow(data: z.infer<typeof TransactionSchema>) {
@@ -36,7 +52,7 @@ function toRow(data: z.infer<typeof TransactionSchema>) {
     amount: data.amount.toFixed(2),
     date: data.date,
     description: data.description,
-    category: data.category ?? null,
+    categoryId: data.categoryId ?? null,
     note: data.note ?? null,
   };
 }
@@ -48,6 +64,7 @@ export async function createTransaction(
   const { userId } = await verifySession();
   const parsed = parse(formData);
   if (!parsed.success) return invalid(parsed.error, formData);
+  if (!(await checkCategory(userId, parsed.data))) return badCategory(formData);
 
   await db.insert(transactions).values({ userId, ...toRow(parsed.data) });
   revalidatePath("/", "layout");
@@ -63,6 +80,7 @@ export async function updateTransaction(
   if (!isUuid(id)) return { message: "This transaction no longer exists." };
   const parsed = parse(formData);
   if (!parsed.success) return invalid(parsed.error, formData);
+  if (!(await checkCategory(userId, parsed.data))) return badCategory(formData);
 
   const updated = await db
     .update(transactions)

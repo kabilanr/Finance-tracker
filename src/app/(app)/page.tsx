@@ -10,7 +10,7 @@ export default async function Dashboard() {
   const month = currentMonth();
   const [totals, recent] = await Promise.all([
     getTotals(userId, { month }),
-    listTransactions(userId, {}).then((rows) => rows.slice(0, 5)),
+    listTransactions(userId, {}, 5),
   ]);
 
   return (
@@ -45,7 +45,7 @@ export default async function Dashboard() {
                   <div>{t.description}</div>
                   <div className="text-xs text-slate-500">
                     {formatDate(t.date)}
-                    {t.category && ` · ${t.category}`}
+                    {t.categoryName && ` · ${t.categoryName}`}
                   </div>
                 </div>
                 <div

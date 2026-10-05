@@ -15,6 +15,27 @@
       "when": 1791221946044,
       "tag": "0001_strong_tiger_shark",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791222272757,
+      "tag": "0002_add_categories",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791222273788,
+      "tag": "0003_migrate_category_data",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791222287377,
+      "tag": "0004_drop_category_text",
+      "breakpoints": true
     }
   ]
 }

@@ -35,7 +35,7 @@ Built with Next.js (App Router, TypeScript), Tailwind CSS, Drizzle ORM and Postg
 - [x] Setup
 - [x] Login (email and password)
 - [x] Transactions
-- [ ] Categories
+- [x] Categories
 - [ ] Accounts and transfers
 - [ ] Budgets
 - [ ] Dashboard and charts

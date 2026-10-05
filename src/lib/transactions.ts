@@ -1,12 +1,13 @@
 import "server-only";
-import { and, desc, eq, gte, ilike, lt, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, gte, ilike, isNull, lt, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { transactions, type TransactionType } from "@/db/schema";
+import { categories, transactions, type TransactionType } from "@/db/schema";
 import { monthRange } from "./dates";
 
 export type TransactionFilters = {
   month?: string; // YYYY-MM, or undefined for all time
   type?: TransactionType;
+  category?: string; // category id, or "none" for uncategorized
   q?: string;
 };
 
@@ -17,12 +18,14 @@ function buildWhere(userId: string, filters: TransactionFilters) {
     conditions.push(gte(transactions.date, start), lt(transactions.date, end));
   }
   if (filters.type) conditions.push(eq(transactions.type, filters.type));
+  if (filters.category === "none") conditions.push(isNull(transactions.categoryId));
+  else if (filters.category) conditions.push(eq(transactions.categoryId, filters.category));
   if (filters.q) {
     const pattern = `%${filters.q.replace(/[\\%_]/g, "\\$&")}%`;
     conditions.push(
       or(
         ilike(transactions.description, pattern),
-        ilike(transactions.category, pattern),
+        ilike(categories.name, pattern),
         ilike(transactions.note, pattern),
       )!,
     );
@@ -30,13 +33,21 @@ function buildWhere(userId: string, filters: TransactionFilters) {
   return and(...conditions);
 }
 
-export async function listTransactions(userId: string, filters: TransactionFilters) {
-  return db
-    .select()
+export async function listTransactions(userId: string, filters: TransactionFilters, limit?: number) {
+  const query = db
+    .select({
+      ...getTableColumns(transactions),
+      categoryName: categories.name,
+      categoryColor: categories.color,
+    })
     .from(transactions)
+    .leftJoin(categories, eq(categories.id, transactions.categoryId))
     .where(buildWhere(userId, filters))
     .orderBy(desc(transactions.date), desc(transactions.createdAt));
+  return limit ? query.limit(limit) : query;
 }
+
+export type TransactionRow = Awaited<ReturnType<typeof listTransactions>>[number];
 
 export async function getTotals(userId: string, filters: TransactionFilters) {
   const [row] = await db
@@ -45,6 +56,7 @@ export async function getTotals(userId: string, filters: TransactionFilters) {
       expense: sql<string>`coalesce(sum(${transactions.amount}) filter (where ${transactions.type} = 'expense'), 0)`,
     })
     .from(transactions)
+    .leftJoin(categories, eq(categories.id, transactions.categoryId))
     .where(buildWhere(userId, filters));
   const income = Number(row.income);
   const expense = Number(row.expense);

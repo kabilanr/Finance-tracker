@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
+import { CategoryBadge } from "@/components/CategoryBadge";
 import { DeleteTransactionButton } from "@/components/DeleteTransactionButton";
+import { SelectFilter } from "@/components/SelectFilter";
 import { SummaryCards } from "@/components/SummaryCards";
 import type { TransactionType } from "@/db/schema";
+import { listCategories } from "@/lib/categories";
 import { verifySession } from "@/lib/dal";
 import { currentMonth, formatDate, formatMonth, isMonth } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
+import { isUuid } from "@/lib/transaction-schema";
 import { getTotals, listTransactions } from "@/lib/transactions";
 
 export const metadata: Metadata = { title: "Transactions · Finance Tracker" };
@@ -29,13 +33,26 @@ export default async function TransactionsPage(props: PageProps<"/transactions">
   const type: TransactionType | undefined =
     typeParam === "income" || typeParam === "expense" ? typeParam : undefined;
   const q = one(params.q)?.trim() || undefined;
+  const categoryParam = one(params.category);
+  const category = categoryParam === "none" || (categoryParam && isUuid(categoryParam)) ? categoryParam : undefined;
 
-  const filters = { month: allTime ? undefined : month, type, q };
-  const [rows, totals] = await Promise.all([listTransactions(userId, filters), getTotals(userId, filters)]);
+  const filters = { month: allTime ? undefined : month, type, category, q };
+  const [rows, totals, categories] = await Promise.all([
+    listTransactions(userId, filters),
+    getTotals(userId, filters),
+    listCategories(userId),
+  ]);
+  const categoryOptions = [
+    { value: "", label: "All categories" },
+    ...categories
+      .filter((c) => !type || c.type === type)
+      .map((c) => ({ value: c.id, label: type ? c.name : `${c.name} (${c.type})` })),
+    { value: "none", label: "Uncategorized" },
+  ];
 
   const href = (overrides: Record<string, string | undefined>) => {
     const next = new URLSearchParams();
-    const merged = { month: allTime ? "all" : month, type, q, ...overrides };
+    const merged = { month: allTime ? "all" : month, type, category, q, ...overrides };
     for (const [k, v] of Object.entries(merged)) if (v) next.set(k, v);
     return `/transactions?${next}`;
   };
@@ -81,13 +98,16 @@ export default async function TransactionsPage(props: PageProps<"/transactions">
 
         <div className="flex gap-1">
           <Link href={href({ type: undefined })} className={tab(!type)}>All</Link>
-          <Link href={href({ type: "income" })} className={tab(type === "income")}>Income</Link>
-          <Link href={href({ type: "expense" })} className={tab(type === "expense")}>Expenses</Link>
+          <Link href={href({ type: "income", category: undefined })} className={tab(type === "income")}>Income</Link>
+          <Link href={href({ type: "expense", category: undefined })} className={tab(type === "expense")}>Expenses</Link>
         </div>
+
+        <SelectFilter param="category" value={category ?? ""} options={categoryOptions} label="Category" />
 
         <Form action="/transactions" className="flex flex-1 gap-2 sm:max-w-xs">
           <input type="hidden" name="month" value={allTime ? "all" : month} />
           {type && <input type="hidden" name="type" value={type} />}
+          {category && <input type="hidden" name="category" value={category} />}
           <input
             name="q"
             defaultValue={q}
@@ -127,7 +147,9 @@ export default async function TransactionsPage(props: PageProps<"/transactions">
                     <div>{t.description}</div>
                     {t.note && <div className="text-xs text-slate-500">{t.note}</div>}
                   </td>
-                  <td className="px-4 py-2 text-slate-500">{t.category ?? "—"}</td>
+                  <td className="whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400">
+                    <CategoryBadge name={t.categoryName} color={t.categoryColor} />
+                  </td>
                   <td
                     className={`whitespace-nowrap px-4 py-2 text-right font-medium tabular-nums ${
                       t.type === "income" ? "text-emerald-600" : "text-red-600"

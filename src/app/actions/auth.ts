@@ -7,6 +7,7 @@ import * as z from "zod";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { AuthFormState, LoginSchema, SignupSchema } from "@/lib/auth-schemas";
+import { seedDefaultCategories } from "@/lib/categories";
 import { createSession, deleteSession } from "@/lib/session";
 
 export async function signup(_state: AuthFormState, formData: FormData): Promise<AuthFormState> {
@@ -24,6 +25,7 @@ export async function signup(_state: AuthFormState, formData: FormData): Promise
 
   const passwordHash = await bcrypt.hash(password, 10);
   const [user] = await db.insert(users).values({ name, email, passwordHash }).returning({ id: users.id });
+  await seedDefaultCategories(user.id);
 
   await createSession(user.id);
   redirect("/");
