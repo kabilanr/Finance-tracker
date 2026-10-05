@@ -9,13 +9,15 @@ export function Sidebar({ badges = {} }: { badges?: Record<string, number> }) {
 
   return (
     <nav className="flex gap-1 overflow-x-auto md:flex-col">
-      {navItems.map((item) =>
-        item.ready ? (
+      {navItems.map((item) => {
+        const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        return (
           <Link
             key={item.href}
             href={item.href}
+            aria-current={active ? "page" : undefined}
             className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium ${
-              (item.href === "/" ? pathname === "/" : pathname.startsWith(item.href))
+              active
                 ? "bg-emerald-600 text-white"
                 : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
             }`}
@@ -30,16 +32,8 @@ export function Sidebar({ badges = {} }: { badges?: Record<string, number> }) {
               </span>
             ) : null}
           </Link>
-        ) : (
-          <span
-            key={item.href}
-            title="Coming soon"
-            className="cursor-not-allowed whitespace-nowrap rounded-md px-3 py-2 text-sm text-slate-400 dark:text-slate-600"
-          >
-            {item.label}
-          </span>
-        ),
-      )}
+        );
+      })}
     </nav>
   );
 }

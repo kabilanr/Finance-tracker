@@ -71,12 +71,21 @@ export default async function TransactionsPage(props: PageProps<"/transactions">
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Transactions</h1>
-        <Link
-          href="/transactions/new"
-          className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
-        >
-          Add transaction
-        </Link>
+        <div className="flex gap-2">
+          <a
+            href={href({}).replace("/transactions?", "/export/csv?").replace("month=all", "")}
+            download
+            className="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+          >
+            Export CSV
+          </a>
+          <Link
+            href="/transactions/new"
+            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+          >
+            Add transaction
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">

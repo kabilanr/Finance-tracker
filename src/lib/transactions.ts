@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, getTableColumns, gte, ilike, isNull, lt, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, gte, ilike, isNull, lt, lte, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { accounts, categories, transactions, type TransactionType } from "@/db/schema";
 import { monthRange } from "./dates";
@@ -9,6 +9,8 @@ export type TransactionFilters = {
   type?: TransactionType;
   category?: string; // category id, or "none" for uncategorized
   account?: string;
+  from?: string; // YYYY-MM-DD, inclusive
+  to?: string; // YYYY-MM-DD, inclusive
   q?: string;
 };
 
@@ -18,6 +20,8 @@ function buildWhere(userId: string, filters: TransactionFilters) {
     const { start, end } = monthRange(filters.month);
     conditions.push(gte(transactions.date, start), lt(transactions.date, end));
   }
+  if (filters.from) conditions.push(gte(transactions.date, filters.from));
+  if (filters.to) conditions.push(lte(transactions.date, filters.to));
   if (filters.type) conditions.push(eq(transactions.type, filters.type));
   if (filters.category === "none") conditions.push(isNull(transactions.categoryId));
   else if (filters.category) conditions.push(eq(transactions.categoryId, filters.category));
