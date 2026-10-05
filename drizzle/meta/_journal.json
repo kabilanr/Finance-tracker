@@ -64,6 +64,13 @@
       "when": 1791222727159,
       "tag": "0008_add_budgets",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791223293074,
+      "tag": "0009_add_recurring_rules",
+      "breakpoints": true
     }
   ]
 }

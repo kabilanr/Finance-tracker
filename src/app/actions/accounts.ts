@@ -4,7 +4,7 @@ import { and, eq, or } from "drizzle-orm";
 import { refresh, revalidatePath } from "next/cache";
 import * as z from "zod";
 import { db } from "@/db";
-import { accounts, transactions, transfers } from "@/db/schema";
+import { accounts, recurringRules, transactions, transfers } from "@/db/schema";
 import { getAccount } from "@/lib/accounts";
 import { verifySession } from "@/lib/dal";
 import { isUuid } from "@/lib/transaction-schema";
@@ -88,9 +88,10 @@ export async function deleteAccount(id: string): Promise<FormState> {
     (await db.$count(
       transfers,
       and(eq(transfers.userId, userId), or(eq(transfers.fromAccountId, id), eq(transfers.toAccountId, id))),
-    ));
+    )) +
+    (await db.$count(recurringRules, and(eq(recurringRules.userId, userId), eq(recurringRules.accountId, id))));
   if (used > 0) {
-    return { error: "This account has entries or transfers. Move or delete them first." };
+    return { error: "This account has entries, transfers or recurring items. Move or delete them first." };
   }
   if ((await db.$count(accounts, eq(accounts.userId, userId))) <= 1) return { error: "You need at least one account." };
   await db.delete(accounts).where(and(eq(accounts.id, id), eq(accounts.userId, userId)));

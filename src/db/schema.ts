@@ -1,4 +1,16 @@
-import { date, index, numeric, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  date,
+  index,
+  integer,
+  numeric,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -50,6 +62,38 @@ export const accounts = pgTable(
 export type Account = typeof accounts.$inferSelect;
 export type AccountKind = (typeof accountKind.enumValues)[number];
 
+export const recurrenceFrequency = pgEnum("recurrence_frequency", ["weekly", "monthly", "yearly"]);
+
+export const recurringRules = pgTable(
+  "recurring_rules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: transactionType("type").notNull(),
+    amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+    description: text("description").notNull(),
+    note: text("note"),
+    categoryId: uuid("category_id").references(() => categories.id, { onDelete: "set null" }),
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => accounts.id, { onDelete: "restrict" }),
+    frequency: recurrenceFrequency("frequency").notNull(),
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date"),
+    // How many occurrences have been turned into transactions so far; the
+    // next one is occurrence number `generatedCount` counted from startDate.
+    generatedCount: integer("generated_count").notNull().default(0),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("recurring_rules_user_idx").on(t.userId)],
+);
+
+export type RecurringRule = typeof recurringRules.$inferSelect;
+export type RecurrenceFrequency = (typeof recurrenceFrequency.enumValues)[number];
+
 export const transactions = pgTable(
   "transactions",
   {
@@ -66,6 +110,7 @@ export const transactions = pgTable(
       .notNull()
       .references(() => accounts.id, { onDelete: "restrict" }),
     note: text("note"),
+    recurringRuleId: uuid("recurring_rule_id").references(() => recurringRules.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("transactions_user_date_idx").on(t.userId, t.date)],

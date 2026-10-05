@@ -7,6 +7,6 @@ export const navItems: NavItem[] = [
   { href: "/categories", label: "Categories", ready: true },
   { href: "/accounts", label: "Accounts", ready: true },
   { href: "/budgets", label: "Budgets", ready: true },
-  { href: "/recurring", label: "Recurring", ready: false },
+  { href: "/recurring", label: "Recurring", ready: true },
   { href: "/export", label: "Export", ready: false },
 ];

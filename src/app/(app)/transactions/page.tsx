@@ -154,6 +154,7 @@ export default async function TransactionsPage(props: PageProps<"/transactions">
                     <div>{t.description}</div>
                     <div className="text-xs text-slate-500">
                       {t.accountName}
+                      {t.recurringRuleId && " · Recurring"}
                       {t.note && ` · ${t.note}`}
                     </div>
                   </td>

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { generateDueTransactions } from "./recurring";
 import { readSession } from "./session";
 
 // Every page and action that touches user data goes through here, so a
@@ -11,6 +12,13 @@ import { readSession } from "./session";
 export const verifySession = cache(async () => {
   const session = await readSession();
   if (!session) redirect("/login");
+  // Recurring entries that fell due since the last visit are created before
+  // any page reads data, so every view of the request already includes them.
+  try {
+    await generateDueTransactions(session.userId);
+  } catch (error) {
+    console.error("Failed to create due recurring entries", error);
+  }
   return session;
 });
 
