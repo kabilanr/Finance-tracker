@@ -6,6 +6,7 @@ import { DeleteTransactionButton } from "@/components/DeleteTransactionButton";
 import { SelectFilter } from "@/components/SelectFilter";
 import { SummaryCards } from "@/components/SummaryCards";
 import type { TransactionType } from "@/db/schema";
+import { listAccounts } from "@/lib/accounts";
 import { listCategories } from "@/lib/categories";
 import { verifySession } from "@/lib/dal";
 import { currentMonth, formatDate, formatMonth, isMonth } from "@/lib/dates";
@@ -36,12 +37,20 @@ export default async function TransactionsPage(props: PageProps<"/transactions">
   const categoryParam = one(params.category);
   const category = categoryParam === "none" || (categoryParam && isUuid(categoryParam)) ? categoryParam : undefined;
 
-  const filters = { month: allTime ? undefined : month, type, category, q };
-  const [rows, totals, categories] = await Promise.all([
+  const accountParam = one(params.account);
+  const account = accountParam && isUuid(accountParam) ? accountParam : undefined;
+
+  const filters = { month: allTime ? undefined : month, type, category, account, q };
+  const [rows, totals, categories, accounts] = await Promise.all([
     listTransactions(userId, filters),
     getTotals(userId, filters),
     listCategories(userId),
+    listAccounts(userId),
   ]);
+  const accountOptions = [
+    { value: "", label: "All accounts" },
+    ...accounts.map((a) => ({ value: a.id, label: a.name })),
+  ];
   const categoryOptions = [
     { value: "", label: "All categories" },
     ...categories
@@ -52,7 +61,7 @@ export default async function TransactionsPage(props: PageProps<"/transactions">
 
   const href = (overrides: Record<string, string | undefined>) => {
     const next = new URLSearchParams();
-    const merged = { month: allTime ? "all" : month, type, category, q, ...overrides };
+    const merged = { month: allTime ? "all" : month, type, category, account, q, ...overrides };
     for (const [k, v] of Object.entries(merged)) if (v) next.set(k, v);
     return `/transactions?${next}`;
   };
@@ -103,11 +112,15 @@ export default async function TransactionsPage(props: PageProps<"/transactions">
         </div>
 
         <SelectFilter param="category" value={category ?? ""} options={categoryOptions} label="Category" />
+        {accounts.length > 1 && (
+          <SelectFilter param="account" value={account ?? ""} options={accountOptions} label="Account" />
+        )}
 
         <Form action="/transactions" className="flex flex-1 gap-2 sm:max-w-xs">
           <input type="hidden" name="month" value={allTime ? "all" : month} />
           {type && <input type="hidden" name="type" value={type} />}
           {category && <input type="hidden" name="category" value={category} />}
+          {account && <input type="hidden" name="account" value={account} />}
           <input
             name="q"
             defaultValue={q}
@@ -145,7 +158,10 @@ export default async function TransactionsPage(props: PageProps<"/transactions">
                   <td className="whitespace-nowrap px-4 py-2 text-slate-500">{formatDate(t.date)}</td>
                   <td className="px-4 py-2">
                     <div>{t.description}</div>
-                    {t.note && <div className="text-xs text-slate-500">{t.note}</div>}
+                    <div className="text-xs text-slate-500">
+                      {t.accountName}
+                      {t.note && ` · ${t.note}`}
+                    </div>
                   </td>
                   <td className="whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400">
                     <CategoryBadge name={t.categoryName} color={t.categoryColor} />

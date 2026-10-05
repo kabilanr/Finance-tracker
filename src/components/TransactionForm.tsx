@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import type { Transaction, TransactionType } from "@/db/schema";
+import type { AccountOption } from "@/lib/accounts";
 import type { CategoryOption } from "@/lib/categories";
 import type { TransactionFormState } from "@/lib/transaction-schema";
 
@@ -19,12 +20,14 @@ export function TransactionForm({
   action,
   transaction,
   categories,
+  accounts,
   defaultDate,
   submitLabel,
 }: {
   action: Action;
   transaction?: Transaction;
   categories: CategoryOption[];
+  accounts: AccountOption[];
   defaultDate: string;
   submitLabel: string;
 }) {
@@ -95,6 +98,22 @@ export function TransactionForm({
           className={inputClass}
         />
         <FieldError errors={state?.errors?.description} />
+      </label>
+
+      <label className="block text-sm">
+        Account
+        <select
+          name="accountId"
+          defaultValue={v?.accountId ?? transaction?.accountId ?? accounts[0]?.id}
+          className={inputClass}
+        >
+          {accounts.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
+          ))}
+        </select>
+        <FieldError errors={state?.errors?.accountId} />
       </label>
 
       <label className="block text-sm">

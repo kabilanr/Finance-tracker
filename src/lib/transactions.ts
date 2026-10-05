@@ -1,13 +1,14 @@
 import "server-only";
 import { and, desc, eq, getTableColumns, gte, ilike, isNull, lt, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { categories, transactions, type TransactionType } from "@/db/schema";
+import { accounts, categories, transactions, type TransactionType } from "@/db/schema";
 import { monthRange } from "./dates";
 
 export type TransactionFilters = {
   month?: string; // YYYY-MM, or undefined for all time
   type?: TransactionType;
   category?: string; // category id, or "none" for uncategorized
+  account?: string;
   q?: string;
 };
 
@@ -20,6 +21,7 @@ function buildWhere(userId: string, filters: TransactionFilters) {
   if (filters.type) conditions.push(eq(transactions.type, filters.type));
   if (filters.category === "none") conditions.push(isNull(transactions.categoryId));
   else if (filters.category) conditions.push(eq(transactions.categoryId, filters.category));
+  if (filters.account) conditions.push(eq(transactions.accountId, filters.account));
   if (filters.q) {
     const pattern = `%${filters.q.replace(/[\\%_]/g, "\\$&")}%`;
     conditions.push(
@@ -39,9 +41,11 @@ export async function listTransactions(userId: string, filters: TransactionFilte
       ...getTableColumns(transactions),
       categoryName: categories.name,
       categoryColor: categories.color,
+      accountName: accounts.name,
     })
     .from(transactions)
     .leftJoin(categories, eq(categories.id, transactions.categoryId))
+    .innerJoin(accounts, eq(accounts.id, transactions.accountId))
     .where(buildWhere(userId, filters))
     .orderBy(desc(transactions.date), desc(transactions.createdAt));
   return limit ? query.limit(limit) : query;

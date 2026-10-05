@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { updateTransaction } from "@/app/actions/transactions";
 import { TransactionForm } from "@/components/TransactionForm";
+import { listAccounts } from "@/lib/accounts";
 import { listCategories } from "@/lib/categories";
 import { verifySession } from "@/lib/dal";
 import { today } from "@/lib/dates";
@@ -15,7 +16,7 @@ export default async function EditTransactionPage(props: PageProps<"/transaction
   const { id } = await props.params;
   const transaction = isUuid(id) ? await getTransaction(userId, id) : null;
   if (!transaction) notFound();
-  const categories = await listCategories(userId);
+  const [categories, accounts] = await Promise.all([listCategories(userId), listAccounts(userId)]);
 
   return (
     <div className="mx-auto max-w-lg">
@@ -23,7 +24,7 @@ export default async function EditTransactionPage(props: PageProps<"/transaction
       <TransactionForm
         action={updateTransaction.bind(null, transaction.id)}
         transaction={transaction}
-        categories={categories}
+        categories={categories} accounts={accounts}
         defaultDate={today()}
         submitLabel="Save changes"
       />

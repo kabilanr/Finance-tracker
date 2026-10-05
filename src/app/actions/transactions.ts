@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import * as z from "zod";
 import { db } from "@/db";
 import { transactions } from "@/db/schema";
+import { getAccount } from "@/lib/accounts";
 import { getCategory } from "@/lib/categories";
 import { verifySession } from "@/lib/dal";
 import { isUuid, TransactionSchema, type TransactionFormState } from "@/lib/transaction-schema";
@@ -20,6 +21,7 @@ function parse(formData: FormData) {
     amount: optional("amount"),
     date: formData.get("date"),
     description: formData.get("description") ?? "",
+    accountId: formData.get("accountId"),
     categoryId: optional("categoryId"),
     note: optional("note"),
   });
@@ -35,15 +37,22 @@ function invalid(error: z.ZodError, formData: FormData): TransactionFormState {
   return { errors: z.flattenError(error).fieldErrors, values: formValues(formData) };
 }
 
-function badCategory(formData: FormData): TransactionFormState {
-  return { errors: { categoryId: ["Pick a category that matches the type."] }, values: formValues(formData) };
-}
-
-// A category must belong to the user and match the transaction's type.
-async function checkCategory(userId: string, data: z.infer<typeof TransactionSchema>) {
-  if (!data.categoryId) return true;
-  const category = await getCategory(userId, data.categoryId);
-  return category?.type === data.type;
+// The account must belong to the user; a category must also match the type.
+async function checkRefs(
+  userId: string,
+  data: z.infer<typeof TransactionSchema>,
+  formData: FormData,
+): Promise<TransactionFormState | null> {
+  if (!(await getAccount(userId, data.accountId))) {
+    return { errors: { accountId: ["Choose an account."] }, values: formValues(formData) };
+  }
+  if (data.categoryId) {
+    const category = await getCategory(userId, data.categoryId);
+    if (category?.type !== data.type) {
+      return { errors: { categoryId: ["Pick a category that matches the type."] }, values: formValues(formData) };
+    }
+  }
+  return null;
 }
 
 function toRow(data: z.infer<typeof TransactionSchema>) {
@@ -52,6 +61,7 @@ function toRow(data: z.infer<typeof TransactionSchema>) {
     amount: data.amount.toFixed(2),
     date: data.date,
     description: data.description,
+    accountId: data.accountId,
     categoryId: data.categoryId ?? null,
     note: data.note ?? null,
   };
@@ -64,7 +74,8 @@ export async function createTransaction(
   const { userId } = await verifySession();
   const parsed = parse(formData);
   if (!parsed.success) return invalid(parsed.error, formData);
-  if (!(await checkCategory(userId, parsed.data))) return badCategory(formData);
+  const refError = await checkRefs(userId, parsed.data, formData);
+  if (refError) return refError;
 
   await db.insert(transactions).values({ userId, ...toRow(parsed.data) });
   revalidatePath("/", "layout");
@@ -80,7 +91,8 @@ export async function updateTransaction(
   if (!isUuid(id)) return { message: "This transaction no longer exists." };
   const parsed = parse(formData);
   if (!parsed.success) return invalid(parsed.error, formData);
-  if (!(await checkCategory(userId, parsed.data))) return badCategory(formData);
+  const refError = await checkRefs(userId, parsed.data, formData);
+  if (refError) return refError;
 
   const updated = await db
     .update(transactions)

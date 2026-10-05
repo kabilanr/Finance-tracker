@@ -36,6 +36,27 @@
       "when": 1791222287377,
       "tag": "0004_drop_category_text",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791222495028,
+      "tag": "0005_add_accounts_and_transfers",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791222496016,
+      "tag": "0006_assign_default_account",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791222497105,
+      "tag": "0007_require_transaction_account",
+      "breakpoints": true
     }
   ]
 }
