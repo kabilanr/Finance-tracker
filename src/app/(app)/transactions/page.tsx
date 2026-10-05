@@ -9,18 +9,12 @@ import type { TransactionType } from "@/db/schema";
 import { listAccounts } from "@/lib/accounts";
 import { listCategories } from "@/lib/categories";
 import { verifySession } from "@/lib/dal";
-import { currentMonth, formatDate, formatMonth, isMonth } from "@/lib/dates";
+import { currentMonth, formatDate, formatMonth, isMonth, shiftMonth } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 import { isUuid } from "@/lib/transaction-schema";
 import { getTotals, listTransactions } from "@/lib/transactions";
 
 export const metadata: Metadata = { title: "Transactions · Finance Tracker" };
-
-function shiftMonth(month: string, delta: number) {
-  const [y, m] = month.split("-").map(Number);
-  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
-  return d.toISOString().slice(0, 7);
-}
 
 export default async function TransactionsPage(props: PageProps<"/transactions">) {
   const { userId } = await verifySession();

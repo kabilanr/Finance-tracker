@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { BudgetAlerts } from "@/components/BudgetAlerts";
 import { SummaryCards } from "@/components/SummaryCards";
+import { budgetAlerts } from "@/lib/budgets";
 import { verifySession } from "@/lib/dal";
 import { currentMonth, formatDate, formatMonth } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
@@ -8,9 +10,10 @@ import { getTotals, listTransactions } from "@/lib/transactions";
 export default async function Dashboard() {
   const { userId } = await verifySession();
   const month = currentMonth();
-  const [totals, recent] = await Promise.all([
+  const [totals, recent, alerts] = await Promise.all([
     getTotals(userId, { month }),
     listTransactions(userId, {}, 5),
+    budgetAlerts(userId, month),
   ]);
 
   return (
@@ -19,6 +22,8 @@ export default async function Dashboard() {
         <h1 className="text-2xl font-semibold">Dashboard</h1>
         <p className="text-sm text-slate-500">{formatMonth(month)}</p>
       </div>
+
+      <BudgetAlerts alerts={alerts} />
 
       <SummaryCards {...totals} labels={["Income this month", "Expenses this month", "Balance this month"]} />
 

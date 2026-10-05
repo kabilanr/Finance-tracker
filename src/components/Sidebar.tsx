@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navItems } from "./nav";
 
-export function Sidebar() {
+export function Sidebar({ badges = {} }: { badges?: Record<string, number> }) {
   const pathname = usePathname();
 
   return (
@@ -21,6 +21,14 @@ export function Sidebar() {
             }`}
           >
             {item.label}
+            {badges[item.href] ? (
+              <span
+                className="ml-2 rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-semibold text-white"
+                aria-label={`${badges[item.href]} alerts`}
+              >
+                {badges[item.href]}
+              </span>
+            ) : null}
           </Link>
         ) : (
           <span

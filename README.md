@@ -37,7 +37,7 @@ Built with Next.js (App Router, TypeScript), Tailwind CSS, Drizzle ORM and Postg
 - [x] Transactions
 - [x] Categories
 - [x] Accounts and transfers
-- [ ] Budgets
+- [x] Budgets
 - [ ] Dashboard and charts
 - [ ] Recurring entries
 - [ ] CSV export

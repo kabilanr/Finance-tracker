@@ -96,3 +96,21 @@ export const transfers = pgTable(
 );
 
 export type Transfer = typeof transfers.$inferSelect;
+
+export const budgets = pgTable(
+  "budgets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => categories.id, { onDelete: "cascade" }),
+    amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("budgets_user_category_idx").on(t.userId, t.categoryId)],
+);
+
+export type Budget = typeof budgets.$inferSelect;

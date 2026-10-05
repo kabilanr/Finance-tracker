@@ -39,3 +39,8 @@ export function formatDate(value: string) {
     timeZone: "UTC",
   });
 }
+
+export function shiftMonth(month: string, delta: number) {
+  const [y, m] = month.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1 + delta, 1)).toISOString().slice(0, 7);
+}
